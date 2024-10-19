@@ -1,0 +1,61 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+
+# Media files
+media/
+
+# Static files
+staticfiles/
+
+# Django secret key
+*.env
+
+# Local virtualenv
+venv/
+env/
+ENV/
+
+# VS Code settings folder
+.vscode/
+
+# PyCharm settings folder
+.idea/
+
+# MacOS files
+.DS_Store
+
+# Linux folder
+*~
+
+# pipenv
+Pipfile.lock
+
+# Test coverage
+htmlcov/
+.tox/
+.coverage
+coverage.xml
+.cache
+.pytest_cache/
+nosetests.xml
+xunit.xml
+
+# Migrations
+*/migrations/*.py
+!*/migrations/__init__.py
