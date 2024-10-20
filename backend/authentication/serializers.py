@@ -1,37 +1,31 @@
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from users.models import CustomUser
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True)
-    password2 = serializers.CharField(write_only=True, required=True)
-
     class Meta:
         model = CustomUser
-        fields = ('email', 'username', 'password', 'password2', 'company', 'role')
-        extra_kwargs = {'email': {'required': True}}
-
-    def validate(self, attrs):
-        if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
-        return attrs
+        fields = ['id', 'email', 'username', 'company', 'role', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        user = CustomUser.objects.create(
-            username=validated_data['username'],
+        user = CustomUser.objects.create_user(
             email=validated_data['email'],
-            company=validated_data['company'],
-            role=validated_data['role']
+            username=validated_data['username'],
+            company=validated_data.get('company', ''),
+            role=validated_data['role'],
+            password=validated_data['password']
         )
-        user.set_password(validated_data['password'])
-        user.save()
         return user
 
+# Custom serializer for login to include additional user info in the token response
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token['email'] = user.email
-        token['company'] = user.company
-        token['role'] = user.role
-        return token
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data.update({
+            'user_id': self.user.id,
+            'email': self.user.email,
+            'role': self.user.role,
+            'company': self.user.company,
+        })
+        return data
