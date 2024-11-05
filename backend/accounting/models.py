@@ -45,8 +45,8 @@ TRANSACTION_STATUS = (
 TRANSACTION_TYPES = (
     ('invoice', 'Invoice'),
     ('payment', 'Payment'),
-    ('expense', 'Expense')
-    ('journal', 'Journal Entry')
+    ('expense', 'Expense'),
+    ('journal', 'Journal Entry'),
 )
 
 class Transaction(models.Model):

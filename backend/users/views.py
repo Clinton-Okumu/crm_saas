@@ -1,36 +1,68 @@
-from rest_framework import viewsets, generics
-from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
-from drf_yasg.utils import swagger_auto_schema  # Import Swagger utilities
-from drf_yasg import openapi
-from .models import CustomUser
-from .serializers import CustomUserSerializer, UserProfileSerializer
+from rest_framework import viewsets, status, generics
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import get_user_model
+from .models import UserProfile
+from .serializers import UserSerializer, UserCreateSerializer, UserProfileSerializer
+from .permissions import CanManageUsers
 
+User = get_user_model()
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    permission_classes = [IsAuthenticated, CanManageUsers]
+    queryset = User.objects.all()
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return UserCreateSerializer
+        return UserSerializer
 
-    @swagger_auto_schema(
-        operation_summary="list users",
-        operation_description="Retrieve all users based on the authenticated user's role.",
-        responses={200: CustomUserSerializer(many=True)},
-    )
     def get_queryset(self):
-        if self.request.user.role == CustomUser.Role.ADMIN:
-            return CustomUser.objects.all()
-        elif self.request.user.role == CustomUser.Role.MANAGER:
-            return CustomUser.objects.filter(role=CustomUser.Role.CLIENT)
-        return CustomUser.objects.none()
+        user = self.request.user
+        
+        # Super admin sees all users
+        if user.role == 'super_admin':
+            return User.objects.all()
+            
+        # HR admin sees all except super admin
+        if user.role == 'hr_admin':
+            return User.objects.exclude(role='super_admin')
+            
+        # Module admins see users in their module
+        if user.role.endswith('_admin'):
+            module = user.primary_module
+            return User.objects.filter(accessible_modules__contains=[module])
+            
+        # Others only see themselves
+        return User.objects.filter(id=user.id)
 
-class UserProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = UserProfileSerializer
-    permission_classes = [IsAuthenticated]
+    @action(detail=True, methods=['patch'])
+    def profile(self, request, pk=None):
+        user = self.get_object()
+        profile = user.profile
+        serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @swagger_auto_schema(
-        operation_summary="Retrieve or update the profile",
-        operation_description="Retrieve or update the profile of the authenticated user.",
-        responses={200: UserProfileSerializer()},
-    )
-    def get_object(self):
-        return self.request.user.profile
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def activate(self, request, pk=None):
+        user = self.get_object()
+        user.is_active = True
+        user.save()
+        return Response({'status': 'user activated'})
+
+    @action(detail=True, methods=['post'])
+    def deactivate(self, request, pk=None):
+        user = self.get_object()
+        user.is_active = False
+        user.save()
+        return Response({'status': 'user deactivated'})

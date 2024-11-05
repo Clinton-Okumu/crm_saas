@@ -1,31 +1,32 @@
 from rest_framework import serializers
-from users.models import CustomUser
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-class CustomUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ['id', 'email', 'username', 'company', 'role', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
+User = get_user_model()
 
-    def create(self, validated_data):
-        user = CustomUser.objects.create_user(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            company=validated_data.get('company', ''),
-            role=validated_data['role'],
-            password=validated_data['password']
-        )
-        return user
-
-# Custom serializer for login to include additional user info in the token response
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+class LoginSerializer(TokenObtainPairSerializer):
+    """
+    Custom login serializer that includes additional user info in response
+    """
     def validate(self, attrs):
         data = super().validate(attrs)
+        # Add extra responses
         data.update({
-            'user_id': self.user.id,
             'email': self.user.email,
             'role': self.user.role,
-            'company': self.user.company,
+            'primary_module': self.user.primary_module,
+            'accessible_modules': self.user.accessible_modules
         })
         return data
+
+class PasswordChangeSerializer(serializers.Serializer):
+    """
+    Serializer for password change
+    """
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
