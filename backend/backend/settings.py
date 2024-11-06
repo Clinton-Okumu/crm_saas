@@ -103,7 +103,7 @@ ACCOUNT_RATE_LIMITS = {
     'login_failed': '5/5m',  # Limit to 5 failed login attempts every 5 minutes
 }
 
-# REST Auth Settings
+# REST Auth Settings# settings.py
 REST_AUTH = {
     'USE_JWT': True,
     'JWT_AUTH_COOKIE': 'crm-auth-cookie',
@@ -196,3 +196,5 @@ USE_TZ = True
 # Static files
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'users.CustomUser'

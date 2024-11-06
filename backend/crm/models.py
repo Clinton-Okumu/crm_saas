@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 
 class Customer(models.Model):
     """
@@ -168,9 +169,10 @@ class Interaction(models.Model):
         help_text="Date and time when this record was created"
     )
     created_by = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,  # Instead of User
         on_delete=models.SET_NULL,
         null=True,
+        related_name='created_interactions',  # Add related_name
         help_text="User who recorded this interaction"
     )
 

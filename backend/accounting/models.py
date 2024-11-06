@@ -58,7 +58,7 @@ class Transaction(models.Model):
     total_amount = models.DecimalField(max_digits=20, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey('auth.User', on_delete=models.PROTECT)
+    created_by = models.ForeignKey('users.CustomUser', on_delete=models.PROTECT)
     
     class Meta:
         ordering = ['-date', '-created_at']
@@ -125,7 +125,7 @@ class Invoice(models.Model):
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey('auth.User', on_delete=models.PROTECT)
+    created_by = models.ForeignKey('users.CustomUser', on_delete=models.PROTECT)
     
     class Meta:
         ordering = ['-issue_date', '-invoice_number']
@@ -188,7 +188,7 @@ class Payment(models.Model):
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey('auth.User', on_delete=models.PROTECT)
+    created_by = models.ForeignKey('users.CustomUser', on_delete=models.PROTECT)
     
     class Meta:
         ordering = ['-payment_date', '-created_at']
