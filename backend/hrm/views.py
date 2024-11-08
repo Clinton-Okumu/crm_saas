@@ -5,11 +5,12 @@ from .models import *
 from .serializers import *
 from rest_framework.decorators import action
 from django.db.models import Q
+from hrm.permissions import CanManageDepartments, CanManageEmployees, CanManageLeaves, CanManageSalaries
 
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanManageDepartments]
     
     def get_queryset(self):
         queryset = Department.objects.all()
@@ -112,7 +113,7 @@ class PositionViewSet(viewsets.ModelViewSet):
 class EmployeeViewSet(viewsets.ModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanManageEmployees]
 
     def get_queryset(self):
         queryset = Employee.objects.all()
@@ -220,121 +221,11 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             'message': 'Employee deactivated successfully'
         }, status=status.HTTP_200_OK)
 
-class EmployeeViewSet(viewsets.ModelViewSet):
-    queryset = Employee.objects.all()
-    serializer_class = EmployeeSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        queryset = Employee.objects.all()
-        
-        # Search by name or employee_id
-        search = self.request.query_params.get('search', None)
-        if search:
-            queryset = queryset.filter(
-                Q(first_name__icontains=search) |
-                Q(last_name__icontains=search) |
-                Q(employee_id__icontains=search)
-            )
-        
-        # Filter by department
-        department_id = self.request.query_params.get('department', None)
-        if department_id:
-            queryset = queryset.filter(department_id=department_id)
-            
-        # Filter by position
-        position_id = self.request.query_params.get('position', None)
-        if position_id:
-            queryset = queryset.filter(position_id=position_id)
-            
-        # Filter by active status
-        is_active = self.request.query_params.get('is_active', None)
-        if is_active is not None:
-            queryset = queryset.filter(is_active=is_active)
-            
-        return queryset
-
-    @action(detail=True, methods=['get'])
-    def profile(self, request, pk=None):
-        """Get complete employee profile"""
-        employee = self.get_object()
-        return Response({
-            'personal_info': EmployeeSerializer(employee).data,
-            'department': employee.department.name,
-            'position': employee.position.title,
-            'is_active': employee.is_active
-        })
-
-    @action(detail=True, methods=['get'])
-    def leaves(self, request, pk=None):
-        """Get employee's leave history"""
-        employee = self.get_object()
-        leaves = LeaveRequest.objects.filter(employee=employee)
-        serializer = LeaveRequestSerializer(leaves, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'])
-    def salary(self, request, pk=None):
-        """Get employee's salary information"""
-        employee = self.get_object()
-        try:
-            salary = Salary.objects.get(employee=employee)
-            serializer = SalarySerializer(salary)
-            return Response(serializer.data)
-        except Salary.DoesNotExist:
-            return Response(
-                {'message': 'No salary information found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-    @action(detail=True, methods=['get'])
-    def performance(self, request, pk=None):
-        """Get employee's performance reviews"""
-        employee = self.get_object()
-        reviews = PerformanceReview.objects.filter(employee=employee)
-        serializer = PerformanceReviewSerializer(reviews, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'])
-    def attendance(self, request, pk=None):
-        """Get employee's attendance records"""
-        employee = self.get_object()
-        start_date = self.request.query_params.get('start_date', None)
-        end_date = self.request.query_params.get('end_date', None)
-        
-        timesheets = TimeSheet.objects.filter(employee=employee)
-        if start_date:
-            timesheets = timesheets.filter(date__gte=start_date)
-        if end_date:
-            timesheets = timesheets.filter(date__lte=end_date)
-            
-        serializer = TimeSheetSerializer(timesheets, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'])
-    def toggle_status(self, request, pk=None):
-        """Toggle employee active status"""
-        employee = self.get_object()
-        employee.is_active = not employee.is_active
-        employee.save()
-        return Response({
-            'message': f"Employee status changed to {'active' if employee.is_active else 'inactive'}",
-            'is_active': employee.is_active
-        })
-
-    def destroy(self, request, *args, **kwargs):
-        """Soft delete by setting is_active to False"""
-        employee = self.get_object()
-        employee.is_active = False
-        employee.save()
-        return Response({
-            'message': 'Employee deactivated successfully'
-        }, status=status.HTTP_200_OK)
 
 class SalaryViewSet(viewsets.ModelViewSet):
     queryset = Salary.objects.all()
     serializer_class = SalarySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanManageSalaries]
 
     def get_queryset(self):
         queryset = Salary.objects.all()
