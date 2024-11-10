@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Customer, Contact, Interaction
+from .permissions import CanManageCustomers, CanManageContacts, CanManageInteractions
 from .serializers import CustomerSerializer, ContactSerializer, InteractionSerializer
 
 class CustomerViewSet(viewsets.ModelViewSet):
@@ -15,7 +16,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
     """
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanManageCustomers]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status']
     search_fields = ['name', 'email', 'phone']
@@ -64,7 +65,7 @@ class ContactViewSet(viewsets.ModelViewSet):
     """
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanManageContacts]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['customer', 'is_primary']
     search_fields = ['first_name', 'last_name', 'email', 'position']
@@ -99,7 +100,7 @@ class InteractionViewSet(viewsets.ModelViewSet):
     """
     queryset = Interaction.objects.all()
     serializer_class = InteractionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanManageInteractions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['customer', 'contact', 'type']
     search_fields = ['notes']
