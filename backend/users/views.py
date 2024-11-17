@@ -5,12 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from .models import UserProfile
 from .serializers import UserSerializer, UserCreateSerializer, UserProfileSerializer
-from .permissions import CanManageUsers
 
 User = get_user_model()
 
 class UserViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, CanManageUsers]
+    permission_classes = [IsAuthenticated]
     queryset = User.objects.all()
     
     def get_serializer_class(self):

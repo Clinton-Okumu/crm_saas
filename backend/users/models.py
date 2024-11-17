@@ -2,11 +2,13 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import validate_email
+from .managers import CustomUserManager
 
 class CustomUser(AbstractUser):
     """
     handles user roles and different access points across the system
     """
+    objects = CustomUserManager()
     class Role(models.TextChoices):
         # System Roles
         SUPER_ADMIN = 'super_admin', _('Super Admin')
@@ -40,12 +42,24 @@ class CustomUser(AbstractUser):
         CRM = 'crm', _('Customer Relationship')
         MEETING = 'meeting', _('Meeting Management')
     
+    username = None
     email = models.EmailField(
         _('email address'),
         unique=True,
         error_messages={
             'unique': _('A user with that email already exists.'),
         }
+    )
+
+    first_name = models.CharField(
+        _('first name'),
+        max_length=30,
+        blank=False
+    )
+    last_name = models.CharField(
+        _('last name'),
+        max_length=150,
+        blank=False
     )
     
     company = models.CharField(
@@ -81,7 +95,7 @@ class CustomUser(AbstractUser):
     )
     
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username','company', 'role']
+    REQUIRED_FIELDS = ['first_name', 'last_name','company', 'role']
     
     def __str__(self):
         return f"{self.email} - {self.get_role_display()}"
@@ -164,7 +178,6 @@ class CustomUser(AbstractUser):
         verbose_name_plural = _('users')
         ordering = ['email']
 
-
 class UserProfile(models.Model):
     """
     Extended profile information for users
@@ -174,35 +187,40 @@ class UserProfile(models.Model):
         on_delete=models.CASCADE,
         related_name='profile'
     )
-    
     phone = models.CharField(
         _('phone number'),
         max_length=20,
-        blank=True
+        blank=True,
+        default=""
     )
-    
     department = models.CharField(
         _('department'),
         max_length=100,
-        blank=True
+        blank=True,
+        default=""
     )
-    
     position = models.CharField(
         _('position'),
         max_length=100,
-        blank=True
+        blank=True,
+        default=""
     )
-    
     bio = models.TextField(
         _('biography'),
-        blank=True
+        blank=True,
+        default=""
     )
-    
     date_of_birth = models.DateField(
         _('date of birth'),
         null=True,
         blank=True
     )
+
+    def get_full_name(self):
+        """
+        Returns the user's full name.
+        """
+        return f"{self.user.first_name} {self.user.last_name}"
 
     def __str__(self):
         return f"{self.user.email}'s profile"
@@ -210,3 +228,4 @@ class UserProfile(models.Model):
     class Meta:
         verbose_name = _('user profile')
         verbose_name_plural = _('user profiles')
+        ordering = ['user__email']

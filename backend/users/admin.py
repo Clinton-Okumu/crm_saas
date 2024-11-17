@@ -9,14 +9,14 @@ class UserProfileInline(admin.StackedInline):
 
 class CustomUserAdmin(UserAdmin):
     inlines = (UserProfileInline,)
-    list_display = ('email', 'company', 'role', 'primary_module', 'is_active', 'date_joined')
+    list_display = ('email', 'first_name', 'last_name', 'company', 'role', 'primary_module', 'is_active', 'date_joined')
     list_filter = ('role', 'primary_module', 'is_active', 'company')
-    search_fields = ('email', 'company')
+    search_fields = ('email', 'first_name', 'last_name', 'company')
     ordering = ('email',)
     
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('company', 'role')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'company', 'role')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser',
                                   'primary_module', 'accessible_modules')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
@@ -25,7 +25,7 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2', 'company', 'role'),
+            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'company', 'role'),
         }),
     )
 
