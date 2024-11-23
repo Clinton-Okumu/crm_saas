@@ -39,6 +39,10 @@ INSTALLED_APPS = [
     'project_mgmt',
     'authentication',
     'users',
+    'documents',
+    'manager',
+    'okrapp',
+    'personalapp',
     
     # Third-party apps
     'rest_framework',
