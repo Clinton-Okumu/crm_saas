@@ -44,3 +44,4 @@ class DocumentViewSet(viewsets.ModelViewSet):
         except settings.AUTH_USER_MODEL.DoesNotExist:
             return Response({"error": "User does not exist."}, status=status.HTTP_400_BAD_REQUEST)
 
+
