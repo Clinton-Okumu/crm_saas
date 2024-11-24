@@ -1,36 +1,48 @@
 from rest_framework import serializers
-from .models import Document
+from .models import Category, Document, DocumentShare
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'description']
 
 class DocumentSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Document model, including metadata like file size and type.
-    """
-
-    file_size = serializers.SerializerMethodField()
-    file_type = serializers.SerializerMethodField()
-
     class Meta:
         model = Document
-        fields = '__all__'
-        read_only_fields = ('slug', 'created_by')
+        fields = [
+            'id', 'title', 'description', 'category', 'status',
+            'file', 'file_size', 'version', 'is_public',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['file_size', 'version', 'created_at', 'updated_at']
 
-    def get_file_size(self, obj):
-        """
-        Returns a human-readable file size.
-        """
-        if not obj.file:
-            return None
-        size = obj.file.size
-        for unit in ['B', 'KB', 'MB', 'GB']:
-            if size < 1024:
-                return f"{size:.1f} {unit}"
-            size /= 1024
-        return f"{size:.1f} TB"
+class DocumentShareSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentShare
+        fields = ['id', 'document', 'user', 'permission', 'shared_at']
+        read_only_fields = ['shared_at']
 
-    def get_file_type(self, obj):
-        """
-        Returns the file extension.
-        """
-        return obj.file.name.split('.')[-1].upper() if obj.file else None
+# views.py
+from rest_framework import viewsets, permissions
+from django.db.models import Q
+from .models import Category, Document, DocumentShare
+from .serializers import CategorySerializer, DocumentSerializer, DocumentShareSerializer
 
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class DocumentViewSet(viewsets.ModelViewSet):
+    serializer_class = DocumentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Document.objects.filter(
+            Q(created_by=self.request.user) |
+            Q(shared_with=self.request.user) |
+            Q(is_public=True)
+        ).distinct()
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
