@@ -1,6 +1,5 @@
-
 from rest_framework import permissions
-
+from .models import Document
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
     Custom permission to allow only the owner of a document to edit or delete it.

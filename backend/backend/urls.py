@@ -40,6 +40,7 @@ urlpatterns = [
     path('api/accounting/', include('accounting.urls')),
     path('api/crm/', include('crm.urls')),
     path('api/hrm/', include('hrm.urls')),
+    path('api/okr/', include('okrapp.urls')),
     path('api/documents/', include('documents.urls')),
     path('api/meeting_mgmt/', include('meeting_mgmt.urls')),
     path('api/project_mgmt/', include('project_mgmt.urls')),
