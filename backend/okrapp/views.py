@@ -18,10 +18,8 @@ class KeyResultViewSet(viewsets.ModelViewSet):
     permission_classes = [IsSuperAdmin | IsProjectAdmin | IsHRManager | IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
-        # Automatically assign the objective owner to key results as well
-        objective = serializer.validated_data.get('objective')
-        if objective:
-            serializer.save(owner=objective.owner)  # Ensure the key result inherits the objective's owner
+        serializer.save()
+
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
@@ -29,8 +27,4 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [IsSuperAdmin | IsProjectAdmin | IsHRManager | IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
-        # Automatically assign the key result owner to tasks as well
-        key_result = serializer.validated_data.get('key_result')
-        if key_result:
-            serializer.save(owner=key_result.objective.owner)  # Ensure the task inherits from the objective owner
-
+        serializer.save()

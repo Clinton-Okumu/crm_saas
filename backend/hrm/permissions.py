@@ -4,6 +4,7 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 from users.permissions import HRModulePermission, BaseModulePermission
 
+
 class CanManageDepartments(HRModulePermission):
     """
     Permission class for managing departments within the HR module.
@@ -183,3 +184,4 @@ class CanManageLeaves(HRModulePermission):
             return request.method in SAFE_METHODS
 
         return False
+
