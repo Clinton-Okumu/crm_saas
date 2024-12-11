@@ -1,10 +1,16 @@
 from django.db import models
+from users.models import CustomUser
+from django.core.exceptions import ValidationError
 
 class Department(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
-    manager = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, related_name='managed_departments')
+    manager = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_departments')
+
+    def clean(self):
+        if self.manager is None:
+            raise ValidationError("A department must have a manager assigned.")
 
     def __str__(self):
         return self.name
@@ -23,7 +29,7 @@ class Employee(models.Model):
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15)
-    employee_id = models.CharField(max_length=50, unique=True)
+    employee_id = models.CharField(max_length=50, unique=True)  # This should be unique and auto-generated
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
     position = models.ForeignKey(Position, on_delete=models.PROTECT)
     hire_date = models.DateField()
