@@ -11,6 +11,8 @@ env = environ.Env(
 # Define BASE_DIR to point to the root directory (where manage.py is)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+
 # Load .env file
 environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env'))
 

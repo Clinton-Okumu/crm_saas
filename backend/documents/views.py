@@ -1,7 +1,7 @@
-
-from rest_framework import viewsets, permissions
-from rest_framework.decorators import action
-from rest_framework.response import Response
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 from .models import Document
 from .serializers import DocumentSerializer
 from .permissions import IsOwnerOrReadOnly
@@ -9,34 +9,14 @@ from .permissions import IsOwnerOrReadOnly
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['title']
+    search_fields = ['title', 'description']
+    ordering_fields = ['created_at', 'updated_at']
 
     def get_queryset(self):
-        """
-        Optionally filters the queryset based on search query and public status.
-        """
-        queryset = Document.objects.all()
-        search = self.request.query_params.get('search', '')
-        is_public = self.request.query_params.get('is_public', None)
-
-        if search:
-            queryset = queryset.filter(title__icontains=search)
-
-        if is_public is not None:
-            queryset = queryset.filter(is_public=is_public)
-
-        return queryset
+        return Document.objects.filter(created_by=self.request.user)
 
     def perform_create(self, serializer):
-        """Set the user who created the document."""
         serializer.save(created_by=self.request.user)
-
-    @action(detail=True, methods=['post'])
-    def toggle_public(self, request, pk=None):
-        """
-        Toggle the document's public status.
-        """
-        document = self.get_object()
-        document.is_public = not document.is_public
-        document.save()
-        return Response({'status': 'Document visibility updated', 'is_public': document.is_public})
