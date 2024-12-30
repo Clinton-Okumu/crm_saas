@@ -1,5 +1,10 @@
 from rest_framework import serializers
 from .models import Department, Position, Employee, LeaveType, LeaveRequest, Salary, PayrollRecord, PerformanceReview, Goal
+from users.serializers import UserSerializer
+from users.models import CustomUser
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 # Department Serializer
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -17,12 +22,18 @@ class PositionSerializer(serializers.ModelSerializer):
 
 # Employee Serializer
 class EmployeeSerializer(serializers.ModelSerializer):
-    department = DepartmentSerializer()  # Nested Department serializer
-    position = PositionSerializer()  # Nested Position serializer
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())  # Accepts only the user's ID
+    department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())  # Accepts only the department's ID
+    position = serializers.PrimaryKeyRelatedField(queryset=Position.objects.all())  # Accepts only the position's ID
 
     class Meta:
         model = Employee
-        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'employee_id', 'department', 'position', 'hire_date', 'is_active', 'date_of_birth', 'profile_picture']
+        fields = ['id', 'user', 'employee_id', 'department', 'position', 'hire_date', 'is_active', 'date_of_birth']
+
+    def create(self, validated_data):
+        # No need to create user, department, or position here since you're using existing records
+        return Employee.objects.create(**validated_data)
+
 
 # LeaveType Serializer
 class LeaveTypeSerializer(serializers.ModelSerializer):

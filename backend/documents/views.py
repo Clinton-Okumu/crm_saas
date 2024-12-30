@@ -19,4 +19,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return Document.objects.filter(created_by=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        user = self.request.user
+        print(f"Authenticated user: {user}")
+        serializer.save(created_by=user)
+

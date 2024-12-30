@@ -21,7 +21,6 @@ class KeyResult(models.Model):
 
 
 class Task(models.Model):
-    key_result = models.ForeignKey(KeyResult, related_name="tasks", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField()
     due_date = models.DateField()
