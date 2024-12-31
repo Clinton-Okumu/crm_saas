@@ -20,20 +20,23 @@ class PositionSerializer(serializers.ModelSerializer):
         model = Position
         fields = ['id', 'title', 'department', 'description', 'is_active']
 
-# Employee Serializer
 class EmployeeSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())  # Accepts only the user's ID
-    department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())  # Accepts only the department's ID
-    position = serializers.PrimaryKeyRelatedField(queryset=Position.objects.all())  # Accepts only the position's ID
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False)  # Assuming a User model
 
     class Meta:
         model = Employee
-        fields = ['id', 'user', 'employee_id', 'department', 'position', 'hire_date', 'is_active', 'date_of_birth']
+        fields = ['first_name', 'last_name', 'email', 'phone', 'department', 'position', 'hire_date', 'status', 'user']
 
     def create(self, validated_data):
-        # No need to create user, department, or position here since you're using existing records
-        return Employee.objects.create(**validated_data)
+        user_data = validated_data.pop('user', None)  # Extract user if present
+        employee = Employee.objects.create(**validated_data)  # Create employee
 
+        # Optionally handle user assignment here
+        if user_data:
+            employee.user = user_data
+            employee.save()
+
+        return employee
 
 # LeaveType Serializer
 class LeaveTypeSerializer(serializers.ModelSerializer):

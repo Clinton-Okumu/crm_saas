@@ -28,24 +28,24 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
 class EmployeeViewSet(viewsets.ModelViewSet):
     """
-    Viewset for managing employees in the HR module.
+    A viewset for managing Employee records.
     """
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
-    permission_classes = [IsAuthenticated, CanManageEmployees]
+    permission_classes = [IsAuthenticated]
 
-    @action(detail=True, methods=['get'])
-    def profile(self, pk=None):
+    def perform_create(self, serializer):
         """
-        Custom action to retrieve the profile of an employee
+        Add any custom behavior during employee creation.
+        For example, associate the employee with the currently logged-in user if necessary.
         """
-        try:
-            employee = self.get_object()
-        except Employee.DoesNotExist:
-            raise NotFound(detail="Employee not found")
-        serializer = self.get_serializer(employee)
-        return Response(serializer.data)
+        serializer.save()
 
+    def get_queryset(self):
+        """
+        Customize the queryset if needed, e.g., filter employees by current user or status.
+        """
+        return Employee.objects.all()
 
 class SalaryViewSet(viewsets.ModelViewSet):
     """
