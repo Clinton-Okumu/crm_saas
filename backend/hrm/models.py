@@ -81,7 +81,7 @@ class LeaveRequest(models.Model):
         return f"{self.employee} - {self.leave_type} ({self.start_date} to {self.end_date})"
 
 class Salary(models.Model):
-    employee = models.OneToOneField(Employee, on_delete=models.CASCADE)
+    employee = models.CharField(max_length=100)
     basic_salary = models.DecimalField(max_digits=10, decimal_places=2)
     bonus = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # New field for bonus
     effective_date = models.DateField()

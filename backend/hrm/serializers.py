@@ -55,11 +55,19 @@ class LeaveRequestSerializer(serializers.ModelSerializer):
 
 # Salary Serializer
 class SalarySerializer(serializers.ModelSerializer):
-    employee = EmployeeSerializer()  # Nested Employee serializer
-
     class Meta:
         model = Salary
         fields = ['id', 'employee', 'basic_salary', 'bonus', 'effective_date']
+
+    def validate_employee(self, value):
+        # Validate that the employee name exists in the Employee model
+        if not Employee.objects.filter(first_name=value).exists():
+            raise serializers.ValidationError(f"No employee found with the name '{value}'.")
+        return value
+
+    def create(self, validated_data):
+        # Ensure only validated data is used for creation
+        return super().create(validated_data)
 
 # PayrollRecord Serializer
 class PayrollRecordSerializer(serializers.ModelSerializer):

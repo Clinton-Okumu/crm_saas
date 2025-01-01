@@ -6,7 +6,7 @@ from rest_framework.exceptions import NotFound
 from hrm.permissions import CanManageDepartments, CanManageLeaves, CanManageSalaries, CanManageEmployees
 from .models import Department, Employee, Salary, LeaveRequest, LeaveType
 from .serializers import DepartmentSerializer, EmployeeSerializer, LeaveRequestSerializer, LeaveTypeSerializer, SalarySerializer
-
+from rest_framework import status
 
 class DepartmentViewSet(viewsets.ModelViewSet):
     """
@@ -48,25 +48,46 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         return Employee.objects.all()
 
 class SalaryViewSet(viewsets.ModelViewSet):
-    """
-    Viewset for managing salaries in the HR module.
-    """
     queryset = Salary.objects.all()
     serializer_class = SalarySerializer
     permission_classes = [IsAuthenticated, CanManageSalaries]
 
-    @action(detail=True, methods=['get'])
-    def view_salary(self, pk=None):
-        """
-        Custom action to view a salary record
-        """
-        try:
-            salary = self.get_object()
-        except Salary.DoesNotExist:
-            raise NotFound(detail="Salary record not found")
-        serializer = self.get_serializer(salary)
-        return Response(serializer.data)
+    def create(self, request, *args, **kwargs):
+        # Extract data from the request
+        employee_name = request.data.get('employee')
+        basic_salary = request.data.get('basic_salary')
+        bonus = request.data.get('bonus', 0)  # Default bonus to 0 if not provided
+        effective_date = request.data.get('effective_date')
 
+        # Validate required fields
+        if not employee_name or not basic_salary or not effective_date:
+            return Response({"error": "Missing required fields."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Optional: Validate employee existence
+        if not Employee.objects.filter(first_name=employee_name).exists():
+            return Response({"error": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            # Create the Salary instance
+            salary = Salary.objects.create(
+                employee=employee_name,
+                basic_salary=basic_salary,
+                bonus=bonus,
+                effective_date=effective_date
+            )
+
+            # Prepare the response data manually
+            response_data = {
+                "id": salary.id,
+                "employee": salary.employee,
+                "basic_salary": salary.basic_salary,
+                "bonus": salary.bonus,
+                "effective_date": salary.effective_date
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class LeaveViewSet(viewsets.ModelViewSet):
     """
